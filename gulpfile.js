@@ -3,18 +3,17 @@ var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var imagemin = require('gulp-imagemin');
 var del = require('del');
-// Get new module : you can search at http://gulpjs.com/plugins/ (don't forget it should be saved in package.json)
+var sass = require('gulp-sass');
 
-// Todo: need to add new path to target .scss files
 var paths = {
   scripts: ['src/js/**/*.js', '!src/external/**/*.js'],
-  images: 'src/img/**/*'
+  images: 'src/img/**/*',
+  scss: 'src/scss/**/*.scss'
 };
 
-// Todo: Need to run the sass task when building
 gulp.task('build', gulp.series(
   clean,
-  gulp.parallel(scripts, images)
+  gulp.parallel(scripts, images, scss)
 ));
 
 gulp.task(clean);
@@ -39,11 +38,15 @@ function scripts() {
     .pipe(gulp.dest('build/js'));
 }
 
-// Todo: add a function to compile sass into css
+function scss() {
+  return gulp.src(paths.scss)
+    .pipe(sass())
+    .pipe(gulp.dest('build/css'));
+}
 
- 
 // Todo: Watch for modification in scss files
 function watch() {
   gulp.watch(paths.scripts, scripts);
   gulp.watch(paths.images, images);
+  gulp.watch(paths.scss, scss);
 }
