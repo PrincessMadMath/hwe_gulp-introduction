@@ -5,13 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Mathieu Gamache",
+  "license": "MIT",
   "devDependencies": {
-    "del": "^2.2.2",
-    "gulp": "gulpjs/gulp#4.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-imagemin": "^3.0.3",
-    "gulp-uglify": "^2.0.0"
+    "gulp": "gulpjs/gulp#4.0"
   }
 }
