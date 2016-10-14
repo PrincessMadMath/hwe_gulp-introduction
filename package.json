@@ -1,0 +1,17 @@
+{
+  "name": "gulp-simple-sample",
+  "version": "1.0.0",
+  "description": "Mini-setup to show gulp ability",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "del": "^2.2.2",
+    "gulp": "gulpjs/gulp#4.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-imagemin": "^3.0.3",
+    "gulp-uglify": "^2.0.0"
+  }
+}
