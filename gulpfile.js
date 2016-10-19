@@ -10,35 +10,23 @@ var cssnano = require('gulp-cssnano');
 var browserSync = require('browser-sync').create();
 
 var paths = {
-  src : {
-    html: 'src/**/*.html',
-    scss: 'src/scss/**/*.scss',
-    css : 'src/css/**/*.css',
-    js: 'src/js/**/*.js',
-    images: 'src/img/**/*',
+  src: "src/",
+  temp: ".temp/",
+  dist: "build/",
+  glob: {
+    html: ['**/*.html'],
+    scss: ['scss/**/*.scss'],
+    css : ['css/**/*.css'],
+    js: ['js/**/*.js'],
+    images: ['img/**/*'],
   },
-  temp : './temp',
-  tempAssets : {
-    html: 'temp/**/*.html',
-    scss: 'temp/**/*.scss',
-    css : 'temp/**/*.css',
-    js: 'temp/**/*.js',
-    images: 'temp/**/*',
+  dest: {
+    html: '',
+    css : 'css/',
+    js: 'js/',
+    images: 'img/',
   },
-  build : {
-    root : 'build/',
-    html: 'build/',
-    css : 'build/css/',
-    js: 'build/js',
-    images: 'build/img/',
-  },
-  buildWatch: {
-    html: 'build/**/*.html',
-    css : 'build/css/**/*.css',
-    js: 'build/js/**/*.js',
-    images: 'build/img/**/*',
-  } 
-};
+}
 
 /*************** Task definition ***************/
 
@@ -58,7 +46,6 @@ gulp.task('clean', gulp.parallel(cleanAsset, cleanBuild));
 
 gulp.task('server', gulp.series('build', gulp.parallel(watchBuild, watchServer, startServer)));
 
-gulp.task('test', copyHtml);
 
 /*************** Utils function ***************/
 
@@ -67,81 +54,126 @@ function cleanAsset() {
 }
 
 function cleanBuild() {
-  return del([paths.build.root]);
+  return del([paths.dist]);
+}
+
+// Todo: this should but not calculated at runtime...
+function prefixGlob(prefix, glob){
+  return glob.map(function(el) { 
+    return prefix + el; 
+  })
 }
 
 /*************** Pre-compile function ***************/
 
 function copyHtml(){
-  return gulp.src(paths.src.html)
-    .pipe(gulp.dest(paths.temp));
+  var glob = prefixGlob(paths.src,paths.glob.html);
+  var dest = paths.temp + paths.dest.html;
+
+  return gulp.src(glob)
+    .pipe(gulp.dest(dest));
 }
 
 function copyScript(){
-  return gulp.src(paths.src.js)
-    .pipe(gulp.dest(paths.temp));
+  var glob = prefixGlob(paths.src,paths.glob.js);
+  var dest = paths.temp + paths.dest.js;
+
+  return gulp.src(glob)
+    .pipe(gulp.dest(dest));
 }
 
 function copyCss(){
-  return gulp.src(paths.src.css)
-    .pipe(gulp.dest(paths.temp));
+  var glob = prefixGlob(paths.src,paths.glob.css);
+  var dest = paths.temp + paths.dest.css;
+
+  return gulp.src(glob)
+    .pipe(gulp.dest(dest));
 }
 
 function copyImages(){
-  return gulp.src(paths.src.images)
-    .pipe(gulp.dest(paths.temp));
+  var glob = prefixGlob(paths.src,paths.glob.images);
+  var dest = paths.temp + paths.dest.images;
+
+  return gulp.src(glob)
+    .pipe(gulp.dest(dest));
 }
 
 function compileSass(){
-    return gulp.src(paths.src.scss)
+    var glob = prefixGlob(paths.src,paths.glob.scss);
+    var dest = paths.temp + paths.dest.css;
+
+    return gulp.src(glob)
     .pipe(sass())
-    .pipe(gulp.dest(paths.temp));
+    .pipe(gulp.dest(dest));
 }
 
 /*************** Build functions (make ready for production) ***************/
 
 function buildHtml(){
-  return gulp.src(paths.tempAssets.html)
-  .pipe(gulp.dest(paths.build.html));
+  var glob = prefixGlob(paths.temp, paths.glob.html);
+  var dest = paths.dist + paths.dest.html;
+
+  return gulp.src(glob)
+  .pipe(gulp.dest(dest));
 }
 
 // Only take from .temp and minify
 function buildCss() {
-  return gulp.src(paths.tempAssets.css)
+  var glob = prefixGlob(paths.temp, paths.glob.css);
+  var dest = paths.dist + paths.dest.css;
+
+  return gulp.src(glob)
     .pipe(cssnano())
-    .pipe(gulp.dest(paths.build.css));
+    .pipe(gulp.dest(dest));
 }
 
 function buildImages() {
-  return gulp.src(paths.tempAssets.images)
+  var glob = prefixGlob(paths.temp, paths.glob.images);
+  var dest = paths.dist + paths.dest.images;
+
+  return gulp.src(glob)
     .pipe(imagemin({optimizationLevel: 5}))
-    .pipe(gulp.dest(paths.build.images));
+    .pipe(gulp.dest(dest));
 }
 
 function buildScript() {
-  return gulp.src(paths.tempAssets.js)
+  var glob = prefixGlob(paths.temp, paths.glob.js);
+  var dest = paths.dist + paths.dest.js;
+
+  return gulp.src(glob)
     .pipe(uglify())
     .pipe(concat('all.min.js'))
-    .pipe(gulp.dest(paths.build.js));
+    .pipe(gulp.dest(dest));
 }
 
 /*************** Watcher functions (change -> build) ***************/
 
 // When a modification is done in the src folder, update the build
 function watchBuild() {
-  gulp.watch(paths.src.html, gulp.series(copyHtml, buildHtml));
-  gulp.watch(paths.src.js, gulp.series(copyScript, buildScript));
-  gulp.watch(paths.src.images, gulp.series(copyImages, buildImages));
-  gulp.watch(paths.src.scss, gulp.series(compileSass, buildCss));
-  gulp.watch(paths.src.css,  gulp.series(copyCss, buildCss));
+  var html_glob = prefixGlob(paths.src,paths.glob.html);
+  var js_glob = prefixGlob(paths.src,paths.glob.js);
+  var image_glob = prefixGlob(paths.src,paths.glob.images);
+  var sass_glob = prefixGlob(paths.src,paths.glob.scss);
+  var css_glob = prefixGlob(paths.src,paths.glob.css);
+
+  gulp.watch(html_glob, gulp.series(copyHtml, buildHtml));
+  gulp.watch(js_glob, gulp.series(copyScript, buildScript));
+  gulp.watch(image_glob, gulp.series(copyImages, buildImages));
+  gulp.watch(sass_glob, gulp.series(compileSass, buildCss));
+  gulp.watch(css_glob,  gulp.series(copyCss, buildCss));
 }
 
 // When change occurs in /build reload-server
 function watchServer() {
-  gulp.watch(paths.buildWatch.html, reload);
-  gulp.watch(paths.buildWatch.js, reload);
-  gulp.watch(paths.buildWatch.images, reload);
-  gulp.watch(paths.buildWatch.css,  injectCss);
+  var html_glob = prefixGlob(paths.dist,paths.glob.html);
+  var js_glob = prefixGlob(paths.dist,paths.glob.js);
+  var image_glob = prefixGlob(paths.dist,paths.glob.images);
+  var css_glob = prefixGlob(paths.dist,paths.glob.css);
+
+  gulp.watch(html_glob, reload);
+  gulp.watch(js_glob, reload);
+  gulp.watch(image_glob, reload);
+  gulp.watch(css_glob,  injectCss);
 }
 
 function reload(done){
@@ -151,14 +183,16 @@ function reload(done){
 
 // Todo: what if src not from same place as baseDir
 function injectCss(){
-  return gulp.src('build/css/**/*.css')
+  var css_glob = prefixGlob(paths.dist,paths.glob.css);
+
+  return gulp.src(css_glob)
     .pipe(browserSync.stream());
 }
 
 function startServer(){
   browserSync.init({
     server: {
-      baseDir: paths.build.root
+      baseDir: paths.dist
     }
   });
 }
