@@ -10,71 +10,143 @@ var cssnano = require('gulp-cssnano');
 var browserSync = require('browser-sync').create();
 
 var paths = {
-  scripts: ['src/js/**/*.js', '!src/external/**/*.js'],
-  images: 'src/img/**/*',
-  scss: 'src/scss/**/*.scss',
-  html: 'src/**/*.html',
-  css : ['src/css/**/*.css', 'temp/css/*.css'],
-  localServer: './build'
+  src : {
+    html: 'src/**/*.html',
+    scss: 'src/scss/**/*.scss',
+    css : 'src/css/**/*.css',
+    js: 'src/js/**/*.js',
+    images: 'src/img/**/*',
+  },
+  temp : './temp',
+  tempAssets : {
+    html: 'temp/**/*.html',
+    scss: 'temp/**/*.scss',
+    css : 'temp/**/*.css',
+    js: 'temp/**/*.js',
+    images: 'temp/**/*',
+  },
+  build : {
+    root : 'build/',
+    html: 'build/',
+    css : 'build/css/',
+    js: 'build/js',
+    images: 'build/img/',
+  },
+  buildWatch: {
+    html: 'build/**/*.html',
+    css : 'build/css/**/*.css',
+    js: 'build/js/**/*.js',
+    images: 'build/img/**/*',
+  } 
 };
 
-gulp.task('build', gulp.series(
-  clean,
-  gulp.parallel(scripts, images, gulp.series(scss, css), html)
+/*************** Task definition ***************/
+
+gulp.task('build:temp', gulp.series(
+  cleanAsset, 
+  gulp.parallel(copyHtml, copyScript, copyCss, copyImages, compileSass)
 ));
 
-gulp.task(clean);
-gulp.task('server', gulp.series('build', gulp.parallel(watch, startServer)));
-gulp.task('default', gulp.series('build', watch));
- 
- 
-function clean() {
-  return del(['build']);
-}
- 
-function images() {
-  return gulp.src(paths.images)
-    .pipe(imagemin({optimizationLevel: 5}))
-    .pipe(gulp.dest('build/img'));
-}
- 
-function scripts() {
-  return gulp.src(paths.scripts)
-    .pipe(uglify())
-    .pipe(concat('all.min.js'))
-    .pipe(gulp.dest('build/js'));
+gulp.task('build:build', gulp.series(
+  cleanBuild,
+  gulp.parallel(buildHtml, buildScript, buildCss, buildImages)
+));
+
+gulp.task('build', gulp.series('build:temp', 'build:build'));
+
+gulp.task('clean', gulp.parallel(cleanAsset, cleanBuild));
+
+gulp.task('server', gulp.series('build', gulp.parallel(watchBuild, watchServer, startServer)));
+
+gulp.task('test', copyHtml);
+
+/*************** Utils function ***************/
+
+function cleanAsset() {
+  return del([paths.temp]);
 }
 
-// Todo: change for if .scss -> sass, but also copy .css in temp
-function scss() {
-  return gulp.src(paths.scss)
+function cleanBuild() {
+  return del([paths.build.root]);
+}
+
+/*************** Pre-compile function ***************/
+
+function copyHtml(){
+  return gulp.src(paths.src.html)
+    .pipe(gulp.dest(paths.temp));
+}
+
+function copyScript(){
+  return gulp.src(paths.src.js)
+    .pipe(gulp.dest(paths.temp));
+}
+
+function copyCss(){
+  return gulp.src(paths.src.css)
+    .pipe(gulp.dest(paths.temp));
+}
+
+function copyImages(){
+  return gulp.src(paths.src.images)
+    .pipe(gulp.dest(paths.temp));
+}
+
+function compileSass(){
+    return gulp.src(paths.src.scss)
     .pipe(sass())
-    .pipe(gulp.dest('temp/css'));
+    .pipe(gulp.dest(paths.temp));
+}
+
+/*************** Build functions (make ready for production) ***************/
+
+function buildHtml(){
+  return gulp.src(paths.tempAssets.html)
+  .pipe(gulp.dest(paths.build.html));
 }
 
 // Only take from .temp and minify
-function css() {
-  return gulp.src(paths.css)
+function buildCss() {
+  return gulp.src(paths.tempAssets.css)
     .pipe(cssnano())
-    .pipe(gulp.dest('build/css'));
+    .pipe(gulp.dest(paths.build.css));
 }
 
-function html(){
-  return gulp.src(paths.html)
-  .pipe(gulp.dest('build/'));
+function buildImages() {
+  return gulp.src(paths.tempAssets.images)
+    .pipe(imagemin({optimizationLevel: 5}))
+    .pipe(gulp.dest(paths.build.images));
 }
 
-// Todo: Watch for modification in scss files
-function watch() {
-  gulp.watch(paths.scripts, scripts);
-  gulp.watch(paths.images, images);
-  gulp.watch(paths.scss, gulp.series(scss, css));
-  gulp.watch(paths.css, css);
-  gulp.watch(paths.html, html);
+function buildScript() {
+  return gulp.src(paths.tempAssets.js)
+    .pipe(uglify())
+    .pipe(concat('all.min.js'))
+    .pipe(gulp.dest(paths.build.js));
 }
 
-function watchReload(){
-  
+/*************** Watcher functions (change -> build) ***************/
+
+// When a modification is done in the src folder, update the build
+function watchBuild() {
+  gulp.watch(paths.src.html, gulp.series(copyHtml, buildHtml));
+  gulp.watch(paths.src.js, gulp.series(copyScript, buildScript));
+  gulp.watch(paths.src.images, gulp.series(copyImages, buildImages));
+  gulp.watch(paths.src.scss, gulp.series(compileSass, buildCss));
+  gulp.watch(paths.src.css,  gulp.series(copyCss, buildCss));
+}
+
+// When change occurs in /build reload-server
+function watchServer() {
+  gulp.watch(paths.buildWatch.html, reload);
+  gulp.watch(paths.buildWatch.js, reload);
+  gulp.watch(paths.buildWatch.images, reload);
+  gulp.watch(paths.buildWatch.css,  injectCss);
+}
+
+function reload(done){
+  browserSync.reload();
+  done();
 }
 
 // Todo: what if src not from same place as baseDir
@@ -86,7 +158,7 @@ function injectCss(){
 function startServer(){
   browserSync.init({
     server: {
-      baseDir: paths.localServer
+      baseDir: paths.build.root
     }
   });
 }
