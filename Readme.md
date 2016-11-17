@@ -2,7 +2,7 @@
 
 Hands-on, multi-step exercise to discover gulp. How to automate multiple aspect of a static web page using gulp.
 
-More details can be found at this (post)[http://helloworldeverything.com/blog/programming/web/gulp_practice/]
+More details can be found at this [post](http://helloworldeverything.com/blog/programming/web/gulp_practice/)
 
 <br>
 
@@ -26,8 +26,8 @@ You will have multiple goals for the automatization of the process:
 
 #### Setup gulp
 
-Follow the (official documentation)[https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md] 
+Follow the [official documentation](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md) 
 
 #### Support lives reload step
 
-I was doing this project side-by-side with my (gulp-starter-pack)[https://github.com/PrincessMadMath/helloworld-gulp-starter] so this part is heavily re-factored. (sorry but considering the probability of someone using this, I was like "meh!")
+I was doing this project side-by-side with my [gulp-starter-pack](https://github.com/PrincessMadMath/helloworld-gulp-starter) so this part is heavily re-factored. (sorry but considering the probability of someone using this, I was like "meh!")
